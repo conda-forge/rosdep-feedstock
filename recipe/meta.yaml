@@ -1,6 +1,6 @@
 {% set name = "rosdep" %}
-{% set version = "0.17.1" %}
-{% set sha256 = "4c45a1d0710d8c6f7ce5f55158e076dc95e1b5a83db3cbaea119c2f05d970dd9" %}
+{% set version = "0.18.0" %}
+{% set sha256 = "a7a89f91baa7d6e0db46c936c91a0d390bdcc023dfaa004307ddbd06fe4e97db" %}
 
 package:
   name: {{ name|lower }}
