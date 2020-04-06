@@ -1,6 +1,6 @@
 {% set name = "rosdep" %}
-{% set version = "0.18.0" %}
-{% set sha256 = "a7a89f91baa7d6e0db46c936c91a0d390bdcc023dfaa004307ddbd06fe4e97db" %}
+{% set version = "0.19.0" %}
+{% set sha256 = "4497f7d220eec5d322bea95484d7bb66daeabdaec762b9095c4cf28759f3d55c" %}
 
 package:
   name: {{ name|lower }}
@@ -35,7 +35,7 @@ about:
   license: BSD-3-Clause
   license_family: BSD
   license_file: LICENSE
-  summary: 'ROS multi-package manager system dependency tool'
+  summary: ROS multi-package manager system dependency tool
   dev_url: https://github.com/ros-infrastructure/rosdep
 
 extra:
