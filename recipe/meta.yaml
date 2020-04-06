@@ -14,6 +14,9 @@ source:
 build:
   number: 0
   script: {{ PYTHON }} -m pip install . --no-deps -vv
+  entry_points:
+    - rosdep = rosdep2.main:rosdep_main
+    - rosdep-source = rosdep2.install:install_main
 
 requirements:
   host:
@@ -22,8 +25,8 @@ requirements:
   run:
     - python
     - catkin_pkg >=0.4.0
-    - rospkg >=1.1.8
-    - rosdistro >=0.7.0
+    - rospkg >=1.1.10
+    - rosdistro >=0.7.5
     - pyyaml >=3.1
 
 test:
