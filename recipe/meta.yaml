@@ -14,7 +14,7 @@ source:
     - add-robostack.patch
 
 build:
-  number: 0
+  number: 1
   script: {{ PYTHON }} -m pip install . --no-deps -vv
   noarch: python
   entry_points:
