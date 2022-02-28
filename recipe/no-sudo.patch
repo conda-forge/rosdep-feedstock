@@ -11,6 +11,10 @@ index 4fb3fb3b8..f57b0410a 100644
  """)
  
      if update:
+diff --git a/src/rosdep2/main.py b/src/rosdep2/main.py
+index 268fcbdc1..073dac52e 100644
+--- a/src/rosdep2/main.py
++++ b/src/rosdep2/main.py
 @@ -174,7 +177,7 @@ def rosdep_main(args=None):
          sys.exit(1)
      except CachePermissionError as e:
