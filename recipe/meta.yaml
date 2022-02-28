@@ -12,6 +12,9 @@ source:
   sha256: {{ sha256 }}
   patches:
     - add-robostack.patch
+    - 661.patch
+    - 810.patch
+    - no-sudo.patch
 
 build:
   number: 0
@@ -49,3 +52,4 @@ extra:
     - wolfv
     - lesteve
     - seanyen
+    - Tobias-Fischer
