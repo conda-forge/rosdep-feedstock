@@ -1,0 +1,167 @@
+diff --git a/src/rosdep2/__init__.py b/src/rosdep2/__init__.py
+index 9bb29b63f..6c6381b51 100644
+--- a/src/rosdep2/__init__.py
++++ b/src/rosdep2/__init__.py
+@@ -68,11 +68,12 @@ def create_default_installer_context(verbose=False):
+     from .platforms import npm
+     from .platforms import gem
+     from .platforms import redhat
++    from .platforms import conda
+     from .platforms import freebsd
+     from .platforms import slackware
+     from .platforms import source
+ 
+-    platform_mods = [alpine, arch, cygwin, debian, gentoo, nix, openembedded, opensuse, osx, redhat, slackware, freebsd]
++    platform_mods = [alpine, arch, cygwin, debian, gentoo, nix, openembedded, opensuse, osx, redhat, conda, slackware, freebsd]
+     installer_mods = [source, pip, gem, npm] + platform_mods
+ 
+     context = InstallerContext()
+diff --git a/src/rosdep2/gbpdistro_support.py b/src/rosdep2/gbpdistro_support.py
+index fd90ae096..9606e9c7d 100644
+--- a/src/rosdep2/gbpdistro_support.py
++++ b/src/rosdep2/gbpdistro_support.py
+@@ -13,10 +13,12 @@
+ from rospkg.os_detect import OS_FEDORA
+ from rospkg.os_detect import OS_OSX
+ from rospkg.os_detect import OS_UBUNTU
++from rospkg.os_detect import OS_CONDA
+ 
+ from .core import InvalidData, DownloadFailure
+ from .platforms.debian import APT_INSTALLER
+ from .platforms.osx import BREW_INSTALLER
++from .platforms.conda import CONDA_INSTALLER
+ from .platforms.redhat import YUM_INSTALLER
+ from .rosdistrohelper import get_targets, get_release_file, PreRep137Warning
+ 
+@@ -169,6 +171,10 @@ def get_gbprepo_as_rosdep_data(gbpdistro):
+             package_name = 'ros-%s-%s' % (release_name, pkg)
+             package_name = package_name.replace('_', '-')
+ 
++            rosdep_data[pkg][OS_CONDA] = {
++                CONDA_INSTALLER: {'packages': [package_name]}
++            }
++
+             for os_name in distro_file.platforms:
+                 if os_name not in rosdep_data[pkg]:
+                     rosdep_data[pkg][os_name] = {}
+diff --git a/src/rosdep2/platforms/conda.py b/src/rosdep2/platforms/conda.py
+new file mode 100644
+index 000000000..8332d3a09
+--- /dev/null
++++ b/src/rosdep2/platforms/conda.py
+@@ -0,0 +1,115 @@
++# Copyright (c) 2021, Tobias Fischer
++# All rights reserved.
++#
++# Redistribution and use in source and binary forms, with or without
++# modification, are permitted provided that the following conditions are met:
++#
++#     * Redistributions of source code must retain the above copyright
++#       notice, this list of conditions and the following disclaimer.
++#     * Redistributions in binary form must reproduce the above copyright
++#       notice, this list of conditions and the following disclaimer in the
++#       documentation and/or other materials provided with the distribution.
++#     * Neither the name of the Willow Garage, Inc. nor the names of its
++#       contributors may be used to endorse or promote products derived from
++#       this software without specific prior written permission.
++#
++# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
++# AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
++# IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
++# ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE
++# LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
++# CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
++# SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
++# INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
++# CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
++# ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
++# POSSIBILITY OF SUCH DAMAGE.
++
++# Author Tobias Fischer/info@tobiasfischer.info
++import subprocess
++import json
++import sys
++
++from rospkg.os_detect import OS_CONDA
++
++from ..installers import PackageManagerInstaller
++
++CONDA_INSTALLER = 'conda'
++
++
++def get_conda_mamba_cmd():
++    candidate_list = ['micromamba', 'mamba', 'conda'] if sys.platform != 'win32' else ['micromamba.exe', 'mamba.exe', 'conda.exe']
++    for candidate in candidate_list:
++        try:
++            subprocess.Popen([candidate], stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()
++            return candidate
++        except OSError:
++            continue
++    raise Exception('None of ' + ', '.join(candidate_list) + ' was found.')
++
++
++def register_installers(context):
++    context.set_installer(CONDA_INSTALLER, CondaInstaller())
++
++
++def register_platforms(context):
++    context.add_os_installer_key(OS_CONDA, CONDA_INSTALLER)
++    context.set_default_os_installer_key(OS_CONDA, lambda self: CONDA_INSTALLER)
++
++
++def conda_detect(packages):
++    conda_ret = json.loads(subprocess.check_output([get_conda_mamba_cmd(), 'list', '--json']))
++    installed_package_names = [installed_package['name'] for installed_package in conda_ret]
++    installed_package_versions = [installed_package['version'] for installed_package in conda_ret]
++    ret_list = []
++    for requested_package in packages:
++        if requested_package == 'REQUIRE_OPENGL' or requested_package == 'REQUIRE_GL':
++            ret_list.append(requested_package)
++            continue
++
++        if ' ' in requested_package:
++            pkg_name = requested_package.split(' ')[0]
++            pkg_version = requested_package.split(' ')[1]
++            try:
++                installed_package_idx = installed_package_names.index(pkg_name)
++                if installed_package_versions[installed_package_idx] == pkg_version or installed_package_versions[installed_package_idx].startswith(pkg_version + '.'):
++                    ret_list.append(requested_package)
++            except ValueError:
++                continue
++        else:
++            try:
++                installed_package_idx = installed_package_names.index(requested_package)
++                ret_list.append(requested_package)
++            except ValueError:
++                continue
++    return ret_list
++
++
++class CondaInstaller(PackageManagerInstaller):
++    def __init__(self):
++        super(CondaInstaller, self).__init__(conda_detect)
++
++    def get_install_command(self, resolved, interactive=True, reinstall=False, quiet=False):
++        packages = self.get_packages_to_install(resolved, reinstall=reinstall)
++        packages = [p if ' ' not in p else p.replace(' ', '=') for p in packages]
++
++        if not packages:
++            return []
++
++        base_cmd = [get_conda_mamba_cmd(), 'install']
++
++        channels = ['robostack', 'robostack-experimental', 'conda-forge']
++        for channel in channels:
++            base_cmd += ['-c', channel]
++
++        if not interactive:
++            base_cmd.append('-y')
++        if quiet:
++            base_cmd.append('-q')
++        if reinstall:
++            base_cmd.append('--force-reinstall')
++
++        return [base_cmd + packages]
++
++    def get_version_strings(self):
++        return subprocess.check_output((get_conda_mamba_cmd(), '--version'))

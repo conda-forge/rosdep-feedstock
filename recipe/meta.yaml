@@ -12,9 +12,12 @@ source:
   sha256: {{ sha256 }}
   patches:
     - add-robostack.patch
+    - 661.patch
+    - 810.patch
+    - no-sudo.patch
 
 build:
-  number: 0
+  number: 1
   script: {{ PYTHON }} -m pip install . --no-deps -vv
   noarch: python
   entry_points:
@@ -50,3 +53,4 @@ extra:
     - wolfv
     - lesteve
     - seanyen
+    - Tobias-Fischer
