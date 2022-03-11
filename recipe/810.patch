@@ -49,7 +49,7 @@ new file mode 100644
 index 000000000..8332d3a09
 --- /dev/null
 +++ b/src/rosdep2/platforms/conda.py
-@@ -0,0 +1,114 @@
+@@ -0,0 +1,115 @@
 +# Copyright (c) 2021, Tobias Fischer
 +# All rights reserved.
 +#
@@ -80,6 +80,7 @@ index 000000000..8332d3a09
 +# Author Tobias Fischer/info@tobiasfischer.info
 +import subprocess
 +import json
++import sys
 +
 +from rospkg.os_detect import OS_CONDA
 +
@@ -89,7 +90,7 @@ index 000000000..8332d3a09
 +
 +
 +def get_conda_mamba_cmd():
-+    candidate_list = ['micromamba', 'mamba', 'conda']
++    candidate_list = ['micromamba', 'mamba', 'conda'] if sys.platform != 'win32' else ['micromamba.exe', 'mamba.exe', 'conda.exe']
 +    for candidate in candidate_list:
 +        try:
 +            subprocess.Popen([candidate], stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()
