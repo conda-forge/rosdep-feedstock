@@ -149,7 +149,7 @@ index 000000000..8332d3a09
 +
 +        base_cmd = [get_conda_mamba_cmd(), 'install']
 +
-+        channels = ['robostack', 'conda-forge']
++        channels = ['robostack', 'robostack-experimental', 'conda-forge']
 +        for channel in channels:
 +            base_cmd += ['-c', channel]
 +
