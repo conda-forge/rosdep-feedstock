@@ -1,11 +1,11 @@
-About rosdep
-============
+About rosdep-feedstock
+======================
+
+Feedstock license: [BSD-3-Clause](https://github.com/conda-forge/rosdep-feedstock/blob/main/LICENSE.txt)
 
 Home: http://wiki.ros.org/rosdep
 
 Package license: BSD-3-Clause
-
-Feedstock license: [BSD-3-Clause](https://github.com/conda-forge/rosdep-feedstock/blob/main/LICENSE.txt)
 
 Summary: ROS multi-package manager system dependency tool
 
