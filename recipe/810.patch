@@ -90,7 +90,7 @@ index 000000000..8332d3a09
 +
 +
 +def get_conda_mamba_cmd():
-+    candidate_list = ['micromamba', 'mamba', 'conda'] if sys.platform != 'win32' else ['micromamba.exe', 'mamba.exe', 'conda.exe']
++    candidate_list = ['micromamba', 'mamba', 'conda'] if sys.platform != 'win32' else ['micromamba.exe', 'mamba.exe', 'mamba.bat', 'conda.exe', 'conda.bat']
 +    for candidate in candidate_list:
 +        try:
 +            subprocess.Popen([candidate], stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()
