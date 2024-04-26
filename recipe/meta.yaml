@@ -1,6 +1,6 @@
 {% set name = "rosdep" %}
-{% set version = "0.22.2" %}
-{% set sha256 = "c8a9b97c107277af3df31972a7186bda7eda0d2dc0495f1acd1901380bc8a54c" %}
+{% set version = "0.23.0" %}
+{% set sha256 = "0d55fa903fd06a07c5ea2c6055127aadce8a736973f8fcdbe173959f484642b1" %}
 
 package:
   name: {{ name|lower }}
@@ -16,7 +16,7 @@ source:
     - no-sudo.patch
 
 build:
-  number: 2
+  number: 0
   script: {{ PYTHON }} -m pip install . --no-deps -vv
   noarch: python
   entry_points:
