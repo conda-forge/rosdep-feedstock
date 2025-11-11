@@ -10,11 +10,11 @@ index 9bb29b63f..6c6381b51 100644
      from .platforms import freebsd
      from .platforms import slackware
      from .platforms import source
- 
+
 -    platform_mods = [alpine, arch, cygwin, debian, gentoo, nix, openembedded, opensuse, osx, redhat, slackware, freebsd]
 +    platform_mods = [alpine, arch, cygwin, debian, gentoo, nix, openembedded, opensuse, osx, redhat, conda, slackware, freebsd]
      installer_mods = [source, pip, gem, npm] + platform_mods
- 
+
      context = InstallerContext()
 diff --git a/src/rosdep2/gbpdistro_support.py b/src/rosdep2/gbpdistro_support.py
 index fd90ae096..9606e9c7d 100644
@@ -25,18 +25,18 @@ index fd90ae096..9606e9c7d 100644
  from rospkg.os_detect import OS_OSX
  from rospkg.os_detect import OS_UBUNTU
 +from rospkg.os_detect import OS_CONDA
- 
+
  from .core import InvalidData, DownloadFailure
  from .platforms.debian import APT_INSTALLER
  from .platforms.osx import BREW_INSTALLER
 +from .platforms.conda import CONDA_INSTALLER
  from .platforms.redhat import YUM_INSTALLER
  from .rosdistrohelper import get_targets, get_release_file, PreRep137Warning
- 
+
 @@ -169,6 +171,10 @@ def get_gbprepo_as_rosdep_data(gbpdistro):
              package_name = 'ros-%s-%s' % (release_name, pkg)
              package_name = package_name.replace('_', '-')
- 
+
 +            rosdep_data[pkg][OS_CONDA] = {
 +                CONDA_INSTALLER: {'packages': [package_name]}
 +            }
@@ -90,7 +90,7 @@ index 000000000..8332d3a09
 +
 +
 +def get_conda_mamba_cmd():
-+    candidate_list = ['micromamba', 'mamba', 'conda'] if sys.platform != 'win32' else ['micromamba.exe', 'mamba.exe', 'mamba.bat', 'conda.exe', 'conda.bat']
++    candidate_list = ['pixi', 'micromamba', 'mamba', 'conda'] if sys.platform != 'win32' else ['pixi.exe', 'micromamba.exe', 'mamba.exe', 'mamba.bat', 'conda.exe', 'conda.bat']
 +    for candidate in candidate_list:
 +        try:
 +            subprocess.Popen([candidate], stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()
@@ -148,14 +148,20 @@ index 000000000..8332d3a09
 +        if not packages:
 +            return []
 +
-+        base_cmd = [get_conda_mamba_cmd(), 'install']
++        cmd = get_conda_mamba_cmd()
++        is_pixi = cmd in ['pixi', 'pixi.exe']
 +
-+        if not interactive:
-+            base_cmd.append('-y')
-+        if quiet:
-+            base_cmd.append('-q')
-+        if reinstall:
-+            base_cmd.append('--force-reinstall')
++        # pixi uses 'add' subcommand, others use 'install'
++        base_cmd = [cmd, 'add' if is_pixi else 'install']
++
++        # pixi doesn't support these flags
++        if not is_pixi:
++            if not interactive:
++                base_cmd.append('-y')
++            if quiet:
++                base_cmd.append('-q')
++            if reinstall:
++                base_cmd.append('--force-reinstall')
 +
 +        return [base_cmd + packages]
 +
