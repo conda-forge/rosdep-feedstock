@@ -155,13 +155,15 @@ index 000000000..8332d3a09
 +        base_cmd = [cmd, 'add' if is_pixi else 'install']
 +
 +        # pixi doesn't support these flags
-+        if not is_pixi:
-+            if not interactive:
-+                base_cmd.append('-y')
-+            if quiet:
-+                base_cmd.append('-q')
-+            if reinstall:
-+                base_cmd.append('--force-reinstall')
++        if is_pixi:
++            return [base_cmd + packages]
++
++        if not interactive:
++            base_cmd.append('-y')
++        if quiet:
++            base_cmd.append('-q')
++        if reinstall:
++            base_cmd.append('--force-reinstall')
 +
 +        return [base_cmd + packages]
 +
