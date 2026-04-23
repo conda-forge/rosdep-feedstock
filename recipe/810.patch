@@ -16,6 +16,7 @@ index 9bb29b63f..6c6381b51 100644
      installer_mods = [source, pip, gem, npm] + platform_mods
  
      context = InstallerContext()
+
 diff --git a/src/rosdep2/gbpdistro_support.py b/src/rosdep2/gbpdistro_support.py
 index fd90ae096..9606e9c7d 100644
 --- a/src/rosdep2/gbpdistro_support.py
@@ -44,12 +45,13 @@ index fd90ae096..9606e9c7d 100644
              for os_name in distro_file.platforms:
                  if os_name not in rosdep_data[pkg]:
                      rosdep_data[pkg][os_name] = {}
+
 diff --git a/src/rosdep2/platforms/conda.py b/src/rosdep2/platforms/conda.py
 new file mode 100644
 index 000000000..8332d3a09
 --- /dev/null
 +++ b/src/rosdep2/platforms/conda.py
-@@ -0,0 +1,111 @@
+@@ -0,0 +1,112 @@
 +# Copyright (c) 2021, Tobias Fischer
 +# All rights reserved.
 +#
@@ -76,10 +78,10 @@ index 000000000..8332d3a09
 +# CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
 +# ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 +# POSSIBILITY OF SUCH DAMAGE.
-+
++#
 +# Author Tobias Fischer/info@tobiasfischer.info
-+import subprocess
 +import json
++import subprocess
 +import sys
 +
 +from rospkg.os_detect import OS_CONDA
@@ -90,7 +92,11 @@ index 000000000..8332d3a09
 +
 +
 +def get_conda_mamba_cmd():
-+    candidate_list = ['micromamba', 'mamba', 'conda'] if sys.platform != 'win32' else ['micromamba.exe', 'mamba.exe', 'mamba.bat', 'conda.exe', 'conda.bat']
++    candidate_list = (
++        ['pixi', 'micromamba', 'mamba', 'conda']
++        if sys.platform != 'win32'
++        else ['pixi.exe', 'micromamba.exe', 'mamba.exe', 'mamba.bat', 'conda.exe', 'conda.bat']
++    )
 +    for candidate in candidate_list:
 +        try:
 +            subprocess.Popen([candidate], stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()
@@ -124,7 +130,10 @@ index 000000000..8332d3a09
 +            pkg_version = requested_package.split(' ')[1]
 +            try:
 +                installed_package_idx = installed_package_names.index(pkg_name)
-+                if installed_package_versions[installed_package_idx] == pkg_version or installed_package_versions[installed_package_idx].startswith(pkg_version + '.'):
++                if (
++                    installed_package_versions[installed_package_idx] == pkg_version
++                    or installed_package_versions[installed_package_idx].startswith(pkg_version + '.')
++                ):
 +                    ret_list.append(requested_package)
 +            except ValueError:
 +                continue
@@ -148,7 +157,15 @@ index 000000000..8332d3a09
 +        if not packages:
 +            return []
 +
-+        base_cmd = [get_conda_mamba_cmd(), 'install']
++        cmd = get_conda_mamba_cmd()
++        is_pixi = cmd in ['pixi', 'pixi.exe']
++
++        # pixi uses 'add' subcommand, others use 'install'
++        base_cmd = [cmd, 'add' if is_pixi else 'install']
++
++        # pixi doesn't support these flags
++        if is_pixi:
++            return [base_cmd + packages]
 +
 +        if not interactive:
 +            base_cmd.append('-y')
