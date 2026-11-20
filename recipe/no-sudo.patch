@@ -1,21 +1,21 @@
 diff --git a/src/rosdep2/catkin_support.py b/src/rosdep2/catkin_support.py
-index 4fb3fb3b8..f57b0410a 100644
+index cea367c..587da1b 100644
 --- a/src/rosdep2/catkin_support.py
 +++ b/src/rosdep2/catkin_support.py
-@@ -104,7 +104,7 @@ def get_catkin_view(rosdistro_name, os_name, os_version, update=True):
+@@ -102,7 +102,7 @@ def get_catkin_view(rosdistro_name, os_name, os_version, update=True):
      sources_list_dir = get_sources_list_dir()
      if not os.path.exists(sources_list_dir):
          raise ValidationFailed("""rosdep database is not initialized, please run:
 -\tsudo rosdep init
-+\rosdep init
++\trosdep init
  """)
  
      if update:
 diff --git a/src/rosdep2/main.py b/src/rosdep2/main.py
-index 63c080543..254a37995 100644
+index 080331f..700ed5e 100644
 --- a/src/rosdep2/main.py
 +++ b/src/rosdep2/main.py
-@@ -179,7 +179,7 @@ def rosdep_main(args=None):
+@@ -196,7 +196,7 @@ ERROR: %s
          sys.exit(1)
      except CachePermissionError as e:
          print(str(e), file=sys.stderr)
@@ -24,7 +24,7 @@ index 63c080543..254a37995 100644
          sys.exit(1)
      except UnsupportedOs as e:
          print('Unsupported OS: %s\nSupported OSes are [%s]' % (e.args[0], ', '.join(e.args[1])), file=sys.stderr)
-@@ -217,11 +217,11 @@ def check_for_sources_list_init(sources_cache_dir):
+@@ -234,11 +234,11 @@ def check_for_sources_list_init(sources_cache_dir):
  
      sources_list_dir = get_sources_list_dir()
      if not os.path.exists(sources_list_dir):
@@ -38,7 +38,7 @@ index 63c080543..254a37995 100644
  
      if commands:
          commands = '\n'.join(['    %s' % c for c in commands])
-@@ -620,7 +620,7 @@ def command_init(options):
+@@ -645,7 +645,7 @@ def command_init(options):
          print('ERROR: cannot create %s:\n\t%s' % (path, e), file=sys.stderr)
          return 2
      except OSError as e:
@@ -47,7 +47,7 @@ index 63c080543..254a37995 100644
          return 3
      finally:
          os.umask(old_umask)
-@@ -643,12 +643,12 @@ def update_error_handler(data_source, exc):
+@@ -668,12 +668,12 @@ def command_update(options):
      warnings.filterwarnings('ignore', category=PreRep137Warning)
  
      if not os.path.exists(sources_list_dir):
@@ -62,7 +62,7 @@ index 63c080543..254a37995 100644
          return 1
      try:
          if not options.quiet:
-@@ -657,7 +657,7 @@ def update_error_handler(data_source, exc):
+@@ -682,7 +682,7 @@ def command_update(options):
          try:
              if os.geteuid() == 0:
                  print("Warning: running 'rosdep update' as root is not recommended.", file=sys.stderr)
